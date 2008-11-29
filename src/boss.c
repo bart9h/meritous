@@ -1827,3 +1827,4 @@ void BossRoom(int room)
 		boss_breakpoint *= 0.8;
 	}
 }
+

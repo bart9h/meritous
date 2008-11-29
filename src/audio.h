@@ -31,3 +31,4 @@ void SND_CircuitRelease(int str);
 void SND_Pos(char *filename, int vol, int dist);
 
 #endif
+

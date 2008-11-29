@@ -697,3 +697,4 @@ void DrawCircuitFlash(int t, int method)
 	UpdatePalette();
 	VideoUpdate();
 }
+

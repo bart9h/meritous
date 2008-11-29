@@ -340,3 +340,4 @@ void DisplayAutomap()
 	DrawRect(437, 232, 200, 3, 230); 	// 6
 	
 }
+

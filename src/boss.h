@@ -54,3 +54,4 @@ extern int resetboss;
 void BossDialog();
 
 #endif
+

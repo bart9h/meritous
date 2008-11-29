@@ -72,3 +72,4 @@ void DestroyDungeon();
 void Paint(int xp, int yp, int w, int h, char *fname);
 
 #endif
+

@@ -21,7 +21,8 @@
 
 // tile data
 
-struct TileInfo {
+struct TileInfo
+{
 	int Is_Solid;
 	int Is_Special;
 	int Is_Passage;
@@ -29,7 +30,8 @@ struct TileInfo {
 	int Type;
 };
 
-struct TileInfo TileData[57] = {
+struct TileInfo TileData[57] =
+{
 	{1, 0, 0, 1, 0}, //  0
 	{1, 0, 0, 1, 0}, //  1
 	{1, 0, 0, 1, 0}, //  2
@@ -89,7 +91,8 @@ struct TileInfo TileData[57] = {
 	{0, 0, 0, 0, 1}  // 56
 };
 
-unsigned char automap_cols[10] = {
+unsigned char automap_cols[10] =
+{
 	140, // 0: Room wall
 	192, // 1: Floor
 	100, // 2: Passage
@@ -102,3 +105,4 @@ unsigned char automap_cols[10] = {
 	0  // 9: --
 
 };
+

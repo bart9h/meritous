@@ -2611,3 +2611,4 @@ void CurseEnemies()
 		e = e->next;
 	}
 }
+

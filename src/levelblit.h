@@ -103,3 +103,4 @@ int dist(int x1, int y1, int x2, int y2);
 #define K_SP 4
 
 #endif
+

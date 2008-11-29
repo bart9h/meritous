@@ -42,3 +42,4 @@ void CloseFile();
 int IsSaveFile();
 
 #endif
+

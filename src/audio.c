@@ -238,3 +238,4 @@ void SND_CircuitRelease(int str)
 {
 	SND_Play("dat/a/circuitrelease.wav", sqrt(str * 2 + (str * 5300 / circuit_size) + (str > 100 ? 5300 : str*53)));
 }
+

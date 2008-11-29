@@ -24,7 +24,8 @@
 #ifndef TILES_H
 #define TILES_H
 
-struct TileInfo {
+struct TileInfo
+{
 	int Is_Solid;
 	int Is_Special;
 	int Is_Passage;

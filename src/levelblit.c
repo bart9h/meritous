@@ -81,6 +81,8 @@ unsigned char font_data[128][8][8];
 
 void DrawShield();
 
+void HandleGamepad (int key_held[]);
+
 int key_held[10] = {0};
 int game_running = 1;
 
@@ -1464,7 +1466,9 @@ void HandleEvents()
 				voluntary_exit = 1;
 			}
 		}
-		
+
+	HandleGamepad (key_held);
+
 	if (RECORDING) {
 		db = 0;
 

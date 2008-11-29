@@ -2091,7 +2091,7 @@ void DrawGem(struct diamond *g)
 
 void xprintf(char *s)
 {
-	printf(s);
+	printf("%s", s);
 	fflush(stdout);
 }
 

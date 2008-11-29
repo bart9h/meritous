@@ -461,10 +461,11 @@ int main(int argc, char **argv)
 	screen = SDL_SetVideoMode(SCREEN_W, SCREEN_H, 8, SDL_SWSURFACE | (SDL_FULLSCREEN * fullscreen));
 	
 	wm_mask_file = fopen("dat/d/icon_bitmask.dat", "rb");
-	fread(wm_mask, 1, 128, wm_mask_file);
+	int wm_mask_ok = fread(wm_mask, 1, 128, wm_mask_file);
 	fclose(wm_mask_file);
 	SDL_WM_SetCaption("~ m e r i t o u s ~", "MT");
-	SDL_WM_SetIcon(wm_icon, wm_mask);
+	if (wm_mask_ok)
+		SDL_WM_SetIcon(wm_icon, wm_mask);
 	InitAudio();
 	
 	text_init();

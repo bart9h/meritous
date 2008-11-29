@@ -466,6 +466,7 @@ int main(int argc, char **argv)
 	SDL_WM_SetCaption("~ m e r i t o u s ~", "MT");
 	if (wm_mask_ok)
 		SDL_WM_SetIcon(wm_icon, wm_mask);
+	SDL_ShowCursor(SDL_DISABLE);
 	InitAudio();
 	
 	text_init();

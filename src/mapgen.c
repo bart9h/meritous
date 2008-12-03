@@ -397,6 +397,10 @@ void Paint(int xp, int yp, int w, int h, char *fname)
 	FILE *fp;
 	int x, y;
 	fp = fopen(fname, "rb");
+	if (fp == NULL) {
+		perror(fname);
+		exit(1);
+	}
 	
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {

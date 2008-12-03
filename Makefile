@@ -19,7 +19,7 @@
 #   along with Meritous.  If not, see <http://www.gnu.org/licenses/>.
 #
 LDFLAGS = `sdl-config --libs` -lSDL_image -lSDL_mixer -lz
-CCFLAGS = -O2 -Wall `sdl-config --cflags` -g
+CCFLAGS = -O2 -Wall `sdl-config --cflags` -ggdb
 #
 OBJS = 	src/levelblit.o \
 		src/mapgen.o \

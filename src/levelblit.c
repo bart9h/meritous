@@ -150,7 +150,7 @@ int UpgradePrice(int t);
 void PlayerDefaultStats()
 {
 	int i;
-	
+
 	player_dying = 0;
 	magic_circuit = 0;
 	circuit_range = 100;
@@ -162,9 +162,9 @@ void PlayerDefaultStats()
 	circuit_size = 1000;
 	first_game = 1;
 	player_hp = 3;
-	
+
 	explored = 0;
-	
+
 	voluntary_exit = 0;
 	player_room = 0;
 	player_dir = 0;
@@ -177,36 +177,36 @@ void PlayerDefaultStats()
 	scroll_home = 0;
 	enter_pressed = 0;
 	show_ending = 0;
-	
+
 	game_paused = 0;
-	
+
 	player_shield = 0;
 	circuit_fillrate = 2;
 	circuit_recoverrate = 3;
-	
+
 	prv_player_room = -1;
 
 	specialmessage = 0;
 	specialmessagetimer = 0;
-	
+
 	opening_door_i = 0;
 
 	map_enabled = 0;
-	
+
 	for (i = 0; i < 12; i++) {
 		artifacts[i] = 0;
 	}
-	
+
 	#ifdef DEBUG_STATS
-	
+
 	player_shield = 24;
 	circuit_fillrate = 24;
 	circuit_recoverrate = 24;
-	
+
 	for (i = 0; i < 12; i++) {
 		artifacts[i] = 1;
 	}
-	
+
 	#endif
 }
 
@@ -240,7 +240,7 @@ void VideoUpdate()
 {
 	static int bmp = 0;
 	char bmp_name[256];
-	
+
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 	if (WriteBitmaps) {
 		if ((bmp >= WB_StartRange)&&(bmp < WB_EndRange)) {
@@ -256,15 +256,15 @@ void EndCycle(int n)
 	static int last_ticks;
 	int tick_delta;
 	tick_delta = SDL_GetTicks() - last_ticks;
-	
+
 	if (n == 0) n = frame_len;
 
 	if (tick_delta < n) {
 		SDL_Delay(n-tick_delta);
 	}
-	
+
 	if (!game_paused) expired_ms += n;
-		
+
 	last_ticks = SDL_GetTicks();
 }
 
@@ -393,13 +393,13 @@ int main(int argc, char **argv)
 	int option = 0;
 	int can_continue = 0;
 	int maxoptions;
-	
+
 	int last_key = 0;
-	
+
 	int fullscreen = 0;
 	int ticker_tick = 0;
 	unsigned int stime = 0;
-	
+
 	FILE *wm_mask_file;
 
 	if (argc > 1) {
@@ -436,31 +436,46 @@ int main(int argc, char **argv)
 	srand(time(NULL));
 	if (RECORDING) {
 		record_file = fopen(record_filename, "wb");
-		stime = time(NULL);
-		
-		fputc(stime & 0x000000FF, record_file);
-		fputc((stime & 0x0000FF00) >> 8, record_file);
-		fputc((stime & 0x00FF0000) >> 16, record_file);
-		fputc((stime & 0xFF000000) >> 24, record_file);
-		
-		srand(stime);
+		if (record_file == NULL) {
+			perror(record_filename);
+		}
+		else {
+			stime = time(NULL);
+
+			fputc(stime & 0x000000FF, record_file);
+			fputc((stime & 0x0000FF00) >> 8, record_file);
+			fputc((stime & 0x00FF0000) >> 16, record_file);
+			fputc((stime & 0xFF000000) >> 24, record_file);
+
+			srand(stime);
+		}
 	}
 	if (PLAYBACK) {
 		record_file = fopen(record_filename, "rb");
-		stime = fgetc(record_file);
-		stime |= fgetc(record_file) << 8;
-		stime |= fgetc(record_file) << 16;
-		stime |= fgetc(record_file) << 24;
-		
-		srand(stime);
+		if (record_file == NULL) {
+			perror(record_filename);
+		}
+		else {
+			stime = fgetc(record_file);
+			stime |= fgetc(record_file) << 8;
+			stime |= fgetc(record_file) << 16;
+			stime |= fgetc(record_file) << 24;
+
+			srand(stime);
+		}
 	}
-	
+
 	asceai = IMG_Load("dat/i/asceai.png");
 	wm_icon = IMG_Load("dat/i/icon.png");
-	
+
 	screen = SDL_SetVideoMode(SCREEN_W, SCREEN_H, 8, SDL_SWSURFACE | (SDL_FULLSCREEN * fullscreen));
-	
-	wm_mask_file = fopen("dat/d/icon_bitmask.dat", "rb");
+
+	const char* icon_filename = "dat/d/icon_bitmask.dat";
+	wm_mask_file = fopen(icon_filename, "rb");
+	if (wm_mask_file == NULL) {
+		perror (icon_filename);
+		exit(1);
+	}
 	int wm_mask_ok = fread(wm_mask, 1, 128, wm_mask_file);
 	fclose(wm_mask_file);
 	SDL_WM_SetCaption("~ m e r i t o u s ~", "MT");
@@ -468,13 +483,13 @@ int main(int argc, char **argv)
 		SDL_WM_SetIcon(wm_icon, wm_mask);
 	SDL_ShowCursor(SDL_DISABLE);
 	InitAudio();
-	
+
 	text_init();
 	for (i = 0; i < 400; i++) {
 		precalc_sine[i] = sin((float)i / 400 * M_PI * 2)*24+24;
 	}
-	
-		
+
+
 	for (i = 0; i < screen->w * screen->h; i++) {
 		x = i % SCREEN_W;
 		y = i / SCREEN_W;
@@ -482,10 +497,10 @@ int main(int argc, char **argv)
 		pulse[i] = dist(x, y, SCREEN_W / 2, SCREEN_H / 2);
 	}
 	SetGreyscalePalette();
-	
+
 	// asceai logo
 	SDL_BlitSurface(asceai, NULL, screen, NULL);
-	
+
 	for (i = 0; i < 75; i++) {
 		SetTitlePalette(i * 5 - 375, i * 5 - 120);
 		VideoUpdate();
@@ -506,22 +521,22 @@ int main(int argc, char **argv)
 		DummyEventPoll();
 		EndCycle(20);
 	}
-	
+
 	while (executable_running) {
 		ticker_tick = 0;
 		TitleScreenMusic();
-		
+
 		if (IsSaveFile()) {
 			can_continue = 1;
 		} else {
 			can_continue = 0;
 		}
-		
+
 		maxoptions = 2 + can_continue;
-	
+
 		title = IMG_Load("dat/i/title.png");
 		title_pr = IMG_Load("dat/i/title.png");
-		
+
 		while (on_title) {
 			SetTitlePalette2(ticker_tick);
 			col_p = (Uint8 *)title_pr->pixels;
@@ -532,12 +547,12 @@ int main(int argc, char **argv)
 				}
 			}
 			SDL_BlitSurface(title_pr, NULL, screen, NULL);
-			
+
 			draw_text(17, 156, MERITOUS_VERSION, 225 + sin((float)ticker_tick / 15)*30);
 			if (can_continue) draw_text((SCREEN_W - 14*8)/2, 310, "Continue", 255);
 			draw_text((SCREEN_W - 14*8)/2, 310 + can_continue*10, "New Game", 255);
 			draw_text((SCREEN_W - 14*8)/2, 320 + can_continue*10, "New Game (Wuss mode)", 255);
-			
+
 			if (ticker_tick >= 30) {
 				draw_text((SCREEN_W - 14*8)/2 - 17, 310 + option * 10, "-", 205 + sin((float)ticker_tick / 5.0)*24);
 				draw_text((SCREEN_W - 14*8)/2 - 20, 310 + option * 10, " >", 205 + sin((float)ticker_tick / 5.0)*24);
@@ -546,12 +561,12 @@ int main(int argc, char **argv)
 				draw_text((SCREEN_W - 14*8)/2 - 18, 310 + option * 10, " >", 165 + sin((float)ticker_tick / 5.0)*24);
 				draw_text((SCREEN_W - 14*8)/2 - 22, 310 + option * 10, " >", 165 + sin((float)ticker_tick / 5.0)*24);
 			}
-	
+
 			VideoUpdate();
-			
+
 			if (ticker_tick++ > 30) {
 				HandleEvents();
-		
+
 				if (key_held[K_UP]) {
 					if (last_key != 1)
 						if (option > 0) option--;
@@ -568,7 +583,7 @@ int main(int argc, char **argv)
 						}
 					}
 				}
-				
+
 				if (voluntary_exit) {
 					executable_running = 0;
 					on_title = 0;
@@ -576,15 +591,15 @@ int main(int argc, char **argv)
 					exit(0);
 				}
 			}
-			
+
 			EndCycle(10);
-	
+
 			light = 0;
 			tick -= 2;
 		}
-		
+
 		ClearInput();
-		
+
 		if (executable_running == 1) {
 			SDL_FreeSurface(title);
 			SDL_FreeSurface(title_pr);
@@ -605,7 +620,7 @@ int main(int argc, char **argv)
 			DestroyThings();
 			on_title = 1;
 			game_load = 0;
-			
+
 			game_running = 1;
 		}
 	}
@@ -625,33 +640,33 @@ void DrawMeter(int x, int y, int n)
 		meter = IMG_Load("dat/i/meter.png");
 		SDL_SetColorKey(meter, SDL_SRCCOLORKEY | SDL_RLEACCEL, 0);
 	}
-	
+
 	drawfrom.x = 0;
 	drawfrom.y = 6;
 	drawfrom.w = 150;
 	drawfrom.h = 6;
-	
+
 	drawto.x = x;
 	drawto.y = y;
-	
+
 	SDL_BlitSurface(meter, &drawfrom, screen, &drawto);
-	
+
 	drawfrom.w = n*6;
 	drawfrom.y = 0;
-	
+
 	SDL_BlitSurface(meter, &drawfrom, screen, &drawto);
 }
 
 void ProgressBarScreen(int part, float progress, char *message, float t_parts)
 {
 	memset(screen->pixels, 0, 640*480);
-	
+
 	DrawRect(200, 217, 240, 50, 80);
 	DrawRect(202, 219, 236, 46, 20);
 	draw_text(232, 228, message, 255);
 	DrawRect(232, 244, 176, 12, 128);
 	DrawRect(234, 246, 172, 8, 0);
-	
+
 	if ((int)(172.0 * progress / t_parts + (172.0 / t_parts * part)) > 0) {
 		DrawRect(234, 246, (int)(172.0 * progress / t_parts + (172.0 / t_parts * part)), 8, 200);
 	}
@@ -662,10 +677,10 @@ void ProgressBarScreen(int part, float progress, char *message, float t_parts)
 void LoadingScreen(int part, float progress)
 {
 	float t_parts;
-	
+
 	if (game_load) t_parts = 5.0;
 	else t_parts = 3.0;
-	
+
 	ProgressBarScreen(part, progress, "Loading... please wait", t_parts);
 	ClearInput();
 }
@@ -681,10 +696,10 @@ void Arc(SDL_Surface *s, int x, int y, int r, float dir)
 	int bright;
 	int i, c;
 	float pdir, cdir, ndir;
-	
+
 	int l_x = x, l_y = y;
 	int cx, cy, c1x, c1y, c2x, c2y;
-	
+
 	bright = rand()%128+63;
 	i = 0;
 	while (i < r) {
@@ -695,22 +710,22 @@ void Arc(SDL_Surface *s, int x, int y, int r, float dir)
 
 		bright += rand()%30;
 		bright -= rand()%30;
-		
+
 		if (bright < 0) bright = 0;
 		if (bright > 255) bright = 255;
-		
+
 		c1x = x + cos(pdir) * i;
 		c1y = y + sin(pdir) * i;
 		ThinLine(s, l_x, l_y, c1x, c1y, bright);
 		c2x = x + cos(ndir) * i;
 		c2y = y + sin(ndir) * i;
 		ThinLine(s, l_x, l_y, c2x, c2y, bright);
-		
+
 		for (c = 0; c < 5; c++) {
 			DrawRect(x + cos(dir - (M_PI / 10.0) + (float)(rand()%16)/16.0*2.0*(M_PI / 10.0)) * i, y + sin(dir - (M_PI / 10.0) +
 					  (float)(rand()%16)/16.0*2.0*(M_PI / 10.0)) * i, 1, 1, rand()%128+63);
 		}
-		
+
 		i += rand()%5+25;
 		cx = x + cos(cdir) * i;
 		cy = y + sin(cdir) * i;
@@ -719,7 +734,7 @@ void Arc(SDL_Surface *s, int x, int y, int r, float dir)
 		l_x = cx;
 		l_y = cy;
 	}
-	
+
 }
 
 int DungeonPlay(char *fname)
@@ -734,11 +749,11 @@ int DungeonPlay(char *fname)
 	int last_killed = 0;
 	int n_arcs = 0;
 	int can_move;
-	
+
 	float arcdir;
-	
+
 	char buf[50];
-	
+
 	expired_ms = 0;
 	LoadingScreen(0, 0.0);
 	if (fname[0] != 0) {
@@ -769,7 +784,7 @@ int DungeonPlay(char *fname)
 			max_dist = rooms[i].s_dist;
 		}
 	}
-	
+
 	game_running = 1;
 	while (game_running) {
 		//sprintf(buf, "X: %d  Y: %d", (player_x + PLAYERW/2)/32*32 + PLAYERW/2, (player_y + PLAYERH/2)/32*32 + PLAYERH/2);
@@ -777,12 +792,12 @@ int DungeonPlay(char *fname)
 		if (!game_paused) {
 			if (player_dying > 30) {
 				player_hp--;
-				
+
 				if (player_hp <= 0) {
 					if (!training) player_lives--;
 					lost_gems = player_gems / 3;
 					player_gems -= lost_gems;
-		
+
 					lost_gems = lost_gems * 95 / 100;
 					while (lost_gems > 0) {
 						rg_x = rooms[player_room].x * 32 + 32 + rand()%(rooms[player_room].w*32-64);
@@ -791,10 +806,10 @@ int DungeonPlay(char *fname)
 						CreateGem(rg_x, rg_y, player_room, rg_v);
 						lost_gems -= rg_v;
 					}
-		
+
 					player_dying = 0;
 					shield_hp = 0;
-					
+
 					if ( (current_boss == 3) && (boss_fight_mode != 0) ) {
 						player_x = enter_room_x;
 						player_y = enter_room_y;
@@ -811,9 +826,9 @@ int DungeonPlay(char *fname)
 				}
 			}
 		}
-		
+
 		circuit_size = 250 + 50*(circuit_fillrate + circuit_recoverrate);
-		
+
 		if (magic_circuit > 0) {
 			circuit_range = (sqrt(magic_circuit + 1) * 6 + min(magic_circuit / 2, 50))*1.66;
 			if (artifacts[3]) circuit_range += circuit_range / 2.4;
@@ -824,10 +839,10 @@ int DungeonPlay(char *fname)
 			SetTonedPalette((float)rooms[player_room].s_dist / (float)max_dist);
 			prv_player_room = player_room;
 			RecordRoom(player_room);
-			
+
 			enter_room_x = player_x;
 			enter_room_y = player_y;
-						
+
 			if (rooms[player_room].room_type == 2) {
 				// lock the doors
 				LockDoors(player_room);
@@ -841,15 +856,15 @@ int DungeonPlay(char *fname)
 			if (rooms[player_room].visited == 0) {
 				rooms[player_room].visited = 1;
 				explored++;
-				
+
 				if (explored == 3000) {
 					agate_knife_loc = player_room;
 				}
-				
+
 				ActivateRoom(player_room);
 			}
 		}
-		
+
 		if (last_killed != killed_enemies) {
 			SetTonedPalette((float)rooms[player_room].s_dist / (float)max_dist);
 			last_killed = killed_enemies;
@@ -863,10 +878,10 @@ int DungeonPlay(char *fname)
 			ScrollTo(player_x + PLAYERW/2 - 320, player_y + PLAYERH/2 - 240);
 			DrawLevel(scroll_x, scroll_y, 1, 1);
 			//DrawLevel(player_x + 8 - 320, player_y + 12 - 240);
-	
+
 			if (player_dying == 0) {
 				DrawShield();
-				
+
 				if (magic_circuit > 0) {
 					if (player_dying == 0) {
 						if (circuit_release == 0) {
@@ -879,11 +894,11 @@ int DungeonPlay(char *fname)
 						}
 					}
 				}
-			
+
 				DrawPlayer(312, 228, player_dir, player_wlk / wlk_wait);
 			} else {
 				if (t % 2 == 0) DrawPlayer(312, 228, player_dir, player_wlk / wlk_wait);
-	
+
 				if (!game_paused)
 					player_dying++;
 			}
@@ -893,11 +908,11 @@ int DungeonPlay(char *fname)
 			}
 			DrawEntities();
 			if (!game_paused) MoveEntities();
-			
+
 			if (boss_fight_mode == 2) {
 				DrawBossHP(100);
 			}
-			
+
 			if (rooms[player_room].room_type == 5) {
 				DrawPowerObject();
 			}
@@ -914,12 +929,12 @@ int DungeonPlay(char *fname)
 					int xpos, ypos;
 					int room_w, room_h;
 					int room_x, room_y;
-					
+
 					room_x = rooms[player_room].x * 32 + 32;
 					room_y = rooms[player_room].y * 32 + 32;
 					room_w = rooms[player_room].w * 32 - 64;
 					room_h = rooms[player_room].h * 32 - 64;
-					
+
 					SDL_Rect draw_to;
 					if (agate_knife == NULL) {
 						agate_knife = IMG_Load("dat/i/agate.png");
@@ -927,13 +942,13 @@ int DungeonPlay(char *fname)
 					}
 					xpos = (int)((sin(agate_t * 1.33)*0.5+0.5) * (float)room_w) + room_x;
 					ypos = (int)((cos(agate_t * 0.7)*0.5+0.5) * (float)room_h) + room_y;
-					
+
 					if (dist(player_x, player_y, xpos, ypos) < 20) {
 						agate_knife_loc = -1;
 						specialmessage = 50;
 						specialmessagetimer = 150;
 						SND_Pos("dat/a/crystal2.wav", 128, 0);
-						
+
 						player_shield = 30;
 						circuit_fillrate = 30;
 						circuit_recoverrate = 30;
@@ -941,13 +956,13 @@ int DungeonPlay(char *fname)
 					}
 					draw_to.x = xpos - 16 - scroll_x;
 					draw_to.y = ypos - 16 - scroll_y;
-					
+
 					SDL_BlitSurface(agate_knife, NULL, screen, &draw_to);
-										
+
 					agate_t += 0.05;
 				}
 			}
-			
+
 			if (opening_door_i > 0) {
 				DrawArtifactOverhead(opening_door_n);
 				for (i = 0; i < 5; i++) {
@@ -956,7 +971,7 @@ int DungeonPlay(char *fname)
 						DrawCircle(player_x - scroll_x, player_y - scroll_y, j, 255);
 					}
 				}
-				
+
 				if (!game_paused) {
 					opening_door_i++;
 					if (opening_door_i >= 100) {
@@ -965,14 +980,14 @@ int DungeonPlay(char *fname)
 					}
 				}
 			}
-	
+
 			if (circuit_release > 0) {
 				DrawCircle(release_x - player_x + 320, release_y - player_y + 240, circuit_release * release_range / 20, sin((float)circuit_release / 20.0)*127+127);
 				if (!game_paused) {
 					CircuitBullets(release_x, release_y, circuit_release * release_range / 20);
 					//HurtEnemies(release_x, release_y, circuit_release * release_range / 20, release_str);
 					circuit_release+=2;
-		
+
 					if (circuit_release > 24) {
 						circuit_release = 0;
 						HurtEnemies(release_x, release_y, release_range, release_str);
@@ -980,7 +995,7 @@ int DungeonPlay(char *fname)
 					}
 				}
 			}
-	
+
 			if (!game_paused) {
 				if (shield_hp < player_shield) {
 					shield_recover += player_shield * 3 / (3 - training - (player_shield == 30));
@@ -992,11 +1007,11 @@ int DungeonPlay(char *fname)
 				}
 			}
 		}
-		
+
 		DrawRect(0, 0, 640, 29, 0);
 		DrawRect(1, 1, 638, 27, 32);
 		DrawRect(2, 2, 636, 25, 64);
-		
+
 		if (!tele_select) {
 			sprintf(buf, "Psi Crystals: %d", player_gems);
 			draw_text(3, 3, buf, 200);
@@ -1004,24 +1019,24 @@ int DungeonPlay(char *fname)
 			draw_text(3, 11, buf, 200);
 			sprintf(buf, "Cleared: %.1f%% (%d/%d monsters)", (float)killed_enemies/(float)total_enemies*100.0, killed_enemies, total_enemies);
 			draw_text(3, 19, buf, 200);
-			
+
 			draw_text(316, 3, "Reflect shield", (player_gems >= UpgradePrice(0))&&(player_shield!=30) ? (231 + (t%13)*2) : 200);
 			DrawMeter(434, 3, player_shield);
-			
+
 			draw_text(316, 11, "Circuit charge", (player_gems >= UpgradePrice(1))&&(circuit_fillrate!=30) ? (231 + (t%13)*2) : 200);
 			DrawMeter(434, 11, circuit_fillrate);
-			
+
 			draw_text(316, 19, "Circuit refill", (player_gems >= UpgradePrice(2))&&(circuit_recoverrate!=30) ? (231 + (t%13)*2) : 200);
 			DrawMeter(434, 19, circuit_recoverrate);
-			
+
 		} else {
 			draw_text(80, 11-6, "Use the movement keys to locate a checkpoint. Press ENTER to", 240);
 			draw_text(52, 11+6, "teleport to this checkpoint. Press ESCAPE or TAB once you are done.", 240);
 		}
-		
+
 		if (!training) {
 			buf[0] = 30;
-		
+
 			if (player_lives <= 99) {
 				if (player_lives < 10) {
 					sprintf(buf+1, " %d", player_lives);
@@ -1031,9 +1046,9 @@ int DungeonPlay(char *fname)
 			} else {
 				sprintf(buf+1, "**");
 			}
-			
+
 			draw_text(615, 4, buf, 200);
-			
+
 			DrawRect(615, 13, 24, 4, 240);
 			DrawRect(616, 14, 22, 2, 0);
 			i = (player_lives_part * 22 / 88);
@@ -1041,7 +1056,7 @@ int DungeonPlay(char *fname)
 				DrawRect(616, 14, i, 2, 160 + (t % 40));
 			}
 		}
-		
+
 		if (player_shield != 30) {
 			for (i = 0; i < player_hp; i++) {
 				buf[i] = 3;
@@ -1056,44 +1071,44 @@ int DungeonPlay(char *fname)
 			}
 			buf[(player_hp+1)/2]=0;
 		}
-		
+
 		draw_text(615, 18 - (5*training), buf, 200);
 
 		DrawRect(0, 466, 640, 14, 0);
 		DrawRect(1, 467, 638, 12, 32);
 		DrawRect(2, 468, 636, 10, 64);
-		
+
 		DrawCircuit();
 		DrawArtifacts();
-		
+
 		SpecialTile((player_x+PLAYERW/2)/32, (player_y+PLAYERH/2)/32);
 
 		if (map_enabled) DisplayAutomap();
-		
+
 		if ((boss_fight_mode != 0)&&(boss_fight_mode == 23)&&(!game_paused)) {
 			BossControl();
 		}
 		if ( (boss_dlg != 0) && (!game_paused)) {
 			BossDialog();
 		}
-		
+
 		if (game_paused && (!map_enabled) && (!voluntary_exit)) {
 			for (i = 0; i < 10; i++) {
 				DrawRect((640 - 6 * 8) / 2 - i, (480 - 8) / 2 - i, 6*8 + 2*i, 8 + 2*i, 64 - i*5);
 			}
 			draw_text((640 - 6 * 8) / 2, (480 - 8) / 2, "Paused", 255);
-			
+
 			{
 				int t_days;
 				int t_hours;
 				int t_minutes;
 				int t_seconds;
-				
+
 				t_seconds = (expired_ms / 1000) % 60;
 				t_minutes = ((expired_ms / 1000) / 60) % 60;
 				t_hours = (((expired_ms / 1000) / 60) / 60) % 24;
 				t_days = (((expired_ms / 1000) / 60) / 60) / 24;
-				
+
 				if (t_days > 0) {
 					sprintf(buf, "%dd %dh %dm %ds", t_days, t_hours, t_minutes, t_seconds);
 				} else {
@@ -1106,29 +1121,29 @@ int DungeonPlay(char *fname)
 				draw_text(636 - strlen(buf)*8, 470, buf, 255);
 			}
 		}
-		
+
 		if (voluntary_exit) {
 			DrawRect(152, 200, 336, 80, 128);
 			DrawRect(160, 208, 320, 64, 64);
 			draw_text((640 - 30 * 8) / 2, (480 - 8) / 2 - 4, "Are you sure you want to quit?", 255);
 			draw_text((640 - 23 * 8) / 2, (480 - 8) / 2 + 4, "Press enter to confirm.", 255);
 		}
-		
+
 		VideoUpdate();
-		
+
 		MusicUpdate();
-		
+
 		EndCycle(0);
-		
+
 		can_move = 1;
-		
+
 		if ((player_dying != 0) && (player_hp <= 1)) can_move = 0;
 		if (rooms[player_room].room_type == 5)
 			if (CanGetArtifact())
 				if (Get((player_x+PLAYERW/2)/32, (player_y+PLAYERH/2)/32)==42)
 					if (rooms[player_room].enemies == 0)
 						can_move = 0;
-						
+
 		if (rooms[player_room].room_type == 6)
 			if (CanGetArtifact())
 				if (PlayerDist(rooms[player_room].w * 16 + rooms[player_room].x * 32,
@@ -1136,20 +1151,20 @@ int DungeonPlay(char *fname)
 					if (rooms[player_room].enemies == 0)
 						if (current_boss == 3)
 							can_move = 0;
-					
+
 		if (scroll_home != 0) can_move = 0;
 		if (boss_fight_mode == 1) can_move = 0;
 		if (boss_fight_mode >= 3) can_move = 0;
 		if (opening_door_i != 0) can_move = 0;
 		if (game_paused) can_move = 0;
-		
+
 		HandleEvents();
 		if (map_enabled) {
 			game_paused = 1;
 		}
-		
+
 		if (can_move) {
-			
+
 			ix = player_x;
 			iy = player_y;
 			off_x = 0;
@@ -1174,7 +1189,7 @@ int DungeonPlay(char *fname)
 				ix += player_walk_speed * (artifacts[4]?1.4:1);;
 				if (!(key_held[K_UP] || key_held[K_DN])) {
 					player_dir = 2;
-					
+
 				}
 			}
 			if ((key_held[K_SP])&&(magic_circuit >= 0)) {
@@ -1191,7 +1206,7 @@ int DungeonPlay(char *fname)
 			}
 
 			if (magic_circuit > circuit_size) magic_circuit = circuit_size;
-			
+
 			if ((ix!=player_x)||(iy!=player_y)) {
 				// Are we changing to a new square?
 				if (((player_x / 32)!=((ix+off_x) / 32)) || ((player_y / 32)!=((iy+off_y) / 32))) {
@@ -1208,27 +1223,27 @@ int DungeonPlay(char *fname)
 								else player_dir = 3;
 							}
 						}
-						
+
 					}
 				} else {
 					player_x = ix;
 					player_y = iy;
-					
+
 					player_wlk = (player_wlk + 1 + artifacts[4]*3) % (4*wlk_wait);
 				}
 			}
 		}
-		
+
 		if ((t % (33 * 10))==(33 * 10 - 1)) {
 			ActivateRand();
 		}
-		
+
 		if (voluntary_exit && enter_pressed) {
 			voluntary_exit = 0;
 			game_running = 0;
 			game_paused = 0;
 		}
-		
+
 		if ((player_lives == 0) && (!training)) {
 			break;
 		}
@@ -1236,28 +1251,28 @@ int DungeonPlay(char *fname)
 			break;
 		}
 	}
-	
+
 	if (show_ending) {
 		show_ending = 0;
 		ShowEnding();
 	}
-	
+
 	if ((player_lives == 0) && (!training)) {
 		SDL_FillRect(screen, NULL, 0);
 		draw_text(252, 236, "G A M E   O V E R", 255);
 		VideoUpdate();
 		SDL_Delay(2000);
 	}
-	
+
 	return 0;
 }
 
 void UpRoom()
 {
 	int i, nd;
-	
+
 	nd = rooms[player_room].s_dist + 1;
-	
+
 	for (i = 0; i < 3000; i++) {
 		if (rooms[i].s_dist == nd) {
 			player_x = rooms[i].x * 32 + 64;
@@ -1279,11 +1294,11 @@ void HandleEvents()
 	unsigned short db;
 	static SDL_Event event;
 	int pressed_tab = 0;
-	
+
 	if (PLAYBACK) {
 		db = fgetc(record_file);
 		db |= fgetc(record_file) << 8;
-		
+
 		key_held[K_UP] = (db & 0x0001)>0;
 		key_held[K_DN] = (db & 0x0002)>0;
 		key_held[K_LT] = (db & 0x0004)>0;
@@ -1299,12 +1314,12 @@ void HandleEvents()
 
 		return;
 	}
-	
+
 	if (pressed_tab) {
 		c_scroll_x = player_x;
 		c_scroll_y = player_y;
 	}
-	
+
 	enter_pressed = 0;
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_KEYDOWN) {
@@ -1368,8 +1383,8 @@ void HandleEvents()
 						game_paused ^= 1;
 						CancelVoluntaryExit();
 						break;
-						
-						
+
+
 					/*
 					case SDLK_j:
 						{
@@ -1408,7 +1423,7 @@ void HandleEvents()
 							artifacts[11] = 0;
 						}
 						break;
-						
+
 					case SDLK_n:
 						{
 							current_boss = 3;
@@ -1452,7 +1467,7 @@ void HandleEvents()
 		
 	if (RECORDING) {
 		db = 0;
-		
+
 		db |= 0x0001 * key_held[K_UP];
 		db |= 0x0002 * key_held[K_DN];
 		db |= 0x0004 * key_held[K_LT];
@@ -1465,12 +1480,12 @@ void HandleEvents()
 		db |= 0x0200 * voluntary_exit;
 		db |= 0x0400 * pressed_tab;
 		db |= 0x0800 * tele_select;
-		
+
 		fputc(db & 0x00FF, record_file);
 		fputc((db & 0xFF00)>>8, record_file);
 		return;
 	}
-	
+
 }
 
 void DrawLevel(int off_x, int off_y, int hide_not_visited, int fog_of_war)
@@ -1481,15 +1496,15 @@ void DrawLevel(int off_x, int off_y, int hide_not_visited, int fog_of_war)
 	SDL_Rect tilerec, screenrec;
 	int x, y, i;
 	int resolve_x, resolve_y;
-	
+
 	DrawRect(0, 0, 640, 480, 255);
-	
+
 	if (tiles == NULL) {
 		tiles = IMG_Load("dat/i/tileset.png");
 		fog = IMG_Load("dat/i/tileset.png");
-				
+
 		pp = fog->pixels;
-		
+
 		for (i = 0; i < fog->w*fog->h; i++) {
 			*pp = *pp / 2 + 128;
 			pp++;
@@ -1499,7 +1514,7 @@ void DrawLevel(int off_x, int off_y, int hide_not_visited, int fog_of_war)
 		for (x = 0; x < 21; x++) {
 			resolve_x = x + (off_x/32);
 			resolve_y = y + (off_y/32);
-			
+
 			if ((GetVisited(resolve_x, resolve_y) == 0)&&(player_room != GetRoom(resolve_x, resolve_y))&&(hide_not_visited)) {
 				tilerec.x = 17 * 32;
 			} else {
@@ -1508,10 +1523,10 @@ void DrawLevel(int off_x, int off_y, int hide_not_visited, int fog_of_war)
 			tilerec.y = 0;
 			tilerec.w = 32;
 			tilerec.h = 32;
-			
+
 			screenrec.x = x*32 - ( (off_x) %32);
 			screenrec.y = y*32 - ( (off_y) %32);
-			
+
 			if ((player_room != GetRoom(resolve_x, resolve_y))&&(fog_of_war)) {
 				SDL_BlitSurface(fog, &tilerec, screen, &screenrec);
 			} else {
@@ -1525,20 +1540,20 @@ void DrawPlayer(int x, int y, int pl_dir, int pl_frm)
 {
 	static SDL_Surface *playersprite = NULL;
 	SDL_Rect playerrec, screenrec;
-	
+
 	if (playersprite == NULL) {
 		playersprite = IMG_Load("dat/i/player.png");
 		SDL_SetColorKey(playersprite, SDL_SRCCOLORKEY | SDL_RLEACCEL, 0);
 	}
-	
+
 	playerrec.x = pl_frm * 16;
 	playerrec.y = pl_dir * 24;
 	playerrec.w = 16;
 	playerrec.h = 24;
-	
+
 	screenrec.x = x;
 	screenrec.y = y;
-	
+
 	SDL_BlitSurface(playersprite, &playerrec, screen, &screenrec);
 }
 
@@ -1547,20 +1562,20 @@ void SetGreyscalePalette()
 	SDL_Color grey[256];
 	SDL_Color pal[256];
 	int i;
-	
+
 	float ip;
-	
+
 	for (i = 0; i < 256; i++) {
 		grey[i].r = grey[i].g = grey[i].b = i;
 	}
-	
+
 	for (i = 0; i < 256; i++) {
 		ip = (float)i / 255.0;
 		pal[i].r = (cos(ip * M_PI / 2.0 + M_PI) + 1.0) * 255;
 		pal[i].g = (sin(ip * M_PI / 2.0) * 255 + i) / 2;
 		pal[i].b = sin(ip * M_PI / 2.0) * 255;
 	}
-	
+
 	SDL_SetPalette(screen, SDL_LOGPAL, grey, 0, 256);
 	SDL_SetPalette(screen, SDL_PHYSPAL, pal, 0, 256);
 }
@@ -1574,16 +1589,16 @@ void SetTonedPalette(float dct)
 	int ec;
 	int i;
 	static int tk = 0;
-	
+
 	ec = rooms[player_room].enemies;
-	
+
 	if (ec < 50) {
 		rp_dct = (float)ec / 50.0;
 	} else {
 		rp_dct = 1.0;
 	}
 	rp_pct = 1.0 - rp_dct;
-	
+
 	if ( (player_room == 0) && (current_boss == 3) && (boss_fight_mode >= 3) ) {
 		if (boss_fight_mode == 23) {
 			for (i = 0; i < 256; i++) {
@@ -1594,7 +1609,7 @@ void SetTonedPalette(float dct)
 		} else {
 			tk++;
 			pct = sin((float)tk / 20.0 * M_PI) * (0.5 - (float)(boss_fight_mode-3)*0.025) + (0.5 - (float)(boss_fight_mode-3)*0.025);
-			
+
 			if (magic_circuit < 0.1) pct = 1.0;
 
 			for (i = 0; i < 256; i++) {
@@ -1603,8 +1618,8 @@ void SetTonedPalette(float dct)
 				pal[i].g = 255 - (255 - i)*pct;
 				pal[i].b = 255 - (255 - sin(ip * M_PI / 2.0) * 255) * pct;
 			}
-			
-			
+
+
 			pal[1].r = 0;
 			pal[1].g = 0;
 			pal[1].b = 0;
@@ -1627,13 +1642,13 @@ void SetTonedPalette(float dct)
 					pal[i].b = (cos(ip * M_PI / 2.0 + M_PI) + 1.0) * 255 * dct;
 				}
 			}
-			
+
 			if ( (current_boss == 3) && (player_shield == 30) && (player_room == 0)) {
 				if (boss_lives <= 1) {
 					tk++;
 					for (i = 0; i < 256; i++) {
 						pct = sin((float) (tk + i) / 24.0 * M_PI) * 0.5 + 0.5;
-						
+
 						pal[i].r = (i * 0.5 + 128)*pct;
 						pal[i].g = i * 0.5 + 128;
 						pal[i].b = (i * 0.5 + 128)*pct;
@@ -1649,7 +1664,7 @@ void SetTonedPalette(float dct)
 			}
 		}
 	}
-	
+
 	SDL_SetPalette(screen, SDL_PHYSPAL, pal, 0, 256);
 }
 
@@ -1658,17 +1673,17 @@ void SetTitlePalette(int curve_start, int curve_end)
 	SDL_Color pal[256];
 	int ec;
 	int i;
-	
+
 	for (i = 0; i < 256; i++) {
 		ec = (i - curve_start) * 255 / (curve_end-curve_start);
 		if (ec < 0) ec = 0;
 		if (ec > 255) ec = 255;
-		
+
 		pal[i].r = ec;
 		pal[i].g = ec;
 		pal[i].b = ec;
 	}
-	
+
 	SDL_SetPalette(screen, SDL_PHYSPAL, pal, 0, 256);
 }
 
@@ -1676,22 +1691,22 @@ void SetTitlePalette2(int t)
 {
 	SDL_Color pal[256];
 	int i;
-	
+
 	float ip;
 	float bright;
 	float b_coeff;
-	
+
 	bright = 1 - ((float)t / 30.0);
 	if (bright < 0.0) bright = 0.0;
 	b_coeff = 1 - bright;
-	
+
 	for (i = 0; i < 256; i++) {
 		ip = (float)i / 255.0;
 		pal[i].r = (cos(ip * M_PI / 2.0 + M_PI) + 1.0) * 255 * b_coeff + 255*bright;
 		pal[i].g = (sin(ip * M_PI / 2.0) * 255 + i) / 2 * b_coeff + 255*bright;
 		pal[i].b = sin(ip * M_PI / 2.0) * 255 * b_coeff + 255*bright;
 	}
-	
+
 	SDL_SetPalette(screen, SDL_PHYSPAL, pal, 0, 256);
 }
 
@@ -1704,7 +1719,7 @@ void ActivateBossDoor(int x, int y)
 {
 	static int bd_timer = 0;
 	int bx = x, by = y;
-	
+
 	// find boss room
 	if (rooms[GetRoom(x+1, y)].room_type == 2) {
 		bx += 1;
@@ -1719,7 +1734,7 @@ void ActivateBossDoor(int x, int y)
 		by -= 1;
 	} else
 		return;
-	
+
 	if (artifacts[8 + rooms[GetRoom(bx, by)].room_param]) {
 		opening_door_x = x;
 		opening_door_y = y;
@@ -1738,7 +1753,7 @@ int TouchTile(int ix, int iy)
 		int off_x, off_y;
 		int ret = 1;
 		unsigned char tile;
-		
+
 		for (i = 0; i < 4; i++) {
 			off_x = 15*(i%2);
 			off_y = 23*(i/2);
@@ -1789,8 +1804,13 @@ void text_init()
 {
 	FILE *font_data_file;
 	int chr, x, y;
-	font_data_file = fopen("dat/d/font.dat", "rb");
-	
+	const char* font_data_filename = "dat/d/font.dat";
+	font_data_file = fopen(font_data_filename, "rb");
+	if (font_data_file == NULL) {
+		perror(font_data_filename);
+		exit(1);
+	}
+
 	for (chr = 0; chr < 128; chr++) {
 		for (y = 0; y < 8; y++) {
 			for (x = 0; x < 8; x++) {
@@ -1806,12 +1826,12 @@ void draw_char(int cur_x, int cur_y, int c, Uint8 tcol)
 {
 	int px, py;
 	Uint8 *pix;
-	
+
 	for (py = 0; py < 8; py++) {
 		pix = (Uint8 *)screen->pixels;
 		pix += (py+cur_y)*screen->w;
 		pix += cur_x;
-		
+
 		if ((cur_x >= 0)&&(py+cur_y >= 0)&&(cur_x < screen->w-8)&&(py+cur_y < screen->h)) {
 			for (px = 0; px < 8; px++) {
 				if (font_data[c][px][py] == 255) {
@@ -1829,7 +1849,7 @@ void draw_char(int cur_x, int cur_y, int c, Uint8 tcol)
 void draw_text(int x, int y, char *str, Uint8 tcol)
 {
 	int c, cur_x, cur_y;
-	
+
 	cur_x = x;
 	cur_y = y;
 
@@ -1849,7 +1869,7 @@ void draw_text_ex(int x, int y, char *str, Uint8 tcol, SDL_Surface *srf)
 {
 	Uint8 *pix;
 	int c, cur_x, cur_y, px, py;
-	
+
 	cur_x = x;
 	cur_y = y;
 
@@ -1882,13 +1902,13 @@ void LockDoors(int r)
 	int rx, ry;
 	int rt;
 	int rcount = 0;
-	
+
 	for (y = 0; y < rooms[r].h; y++) {
 		for (x = 0; x < rooms[r].w; x++) {
 			rx = x + rooms[r].x;
 			ry = y + rooms[r].y;
 			rt = Get(rx, ry);
-			
+
 			if ((rt >= 13) && (rt <= 16)) {
 				rcount++;
 				Put(rx, ry, rt - 13 + 21, r);
@@ -1950,7 +1970,7 @@ void ReleaseCircuit()
 	if (circuit_fillrate==30) {
 		release_str *= 1.25;
 	}
-	
+
 	SND_CircuitRelease(release_str);
 	magic_circuit *= -1;
 }
@@ -1976,7 +1996,7 @@ void DrawCircle(int x, int y, int r, unsigned char c)
 			DrawRect(x + inner_len_x, y + circ_y, (outer_len_x - inner_len_x), 1, c);
 		} else {
 			len_x = sqrt(r*r - circ_y*circ_y);
-		
+
 			DrawRect(x - len_x, y - circ_y, len_x*2, 1, c);
 			DrawRect(x - len_x, y + circ_y, len_x*2, 1, c);
 		}
@@ -2007,7 +2027,7 @@ void DrawCircleEx(int x, int y, int r, int r2, unsigned char c)
 			DrawRect(x + inner_len_x, y + circ_y, (outer_len_x - inner_len_x), 1, c);
 		} else {
 			len_x = sqrt(r*r - circ_y*circ_y);
-		
+
 			DrawRect(x - len_x, y - circ_y, len_x*2, 1, c);
 			DrawRect(x - len_x, y + circ_y, len_x*2, 1, c);
 		}
@@ -2021,17 +2041,17 @@ void DrawShield()
 	int belts = 0;
 	int i, bpos;
 	t++;
-	
+
 	if (player_shield == 0) return;
 	if (shield_hp == 0) return;
-	
+
 	s_size = shield_hp;
 	if (s_size > 15) {
 		belts = s_size - 15;
 		s_size = 15;
 	}
 	DrawCircleEx(320, 240, 28+s_size, 28-s_size, 128 + (shield_hp*127/player_shield) - (50*(shield_hp<player_shield) + shield_recover) - 45 + ((t%4)*15));
-	
+
 	for (i = 0; i < belts; i++) {
 		bpos = 13 + (30 * (i+1) / (belts+1));
 		DrawCircleEx(320, 240, bpos + 1, bpos - 1, ((i+t)%6*12));
@@ -2067,7 +2087,7 @@ void RoomTreasure(int room, int typ)
 {
 	int treasure;
 	int given_treasure = 0;
-	
+
 	if (typ == 0) {
 		// Treasure
 		treasure = rooms[room].room_param;
@@ -2080,7 +2100,7 @@ void RoomTreasure(int room, int typ)
 		// Reward
 		while (!given_treasure) {
 			treasure = rand() % 4;
-			
+
 			switch (treasure) {
 				case 0:
 					specialmessage = 20;
@@ -2137,12 +2157,12 @@ int GetNearestCheckpoint(int nx, int ny)
 		}
 	}
 	if (nearest_checkpoint == -1) {
-				
+
 		for (y = 0; y < 54;) {
 			for (x = 0; x < 54;) {
 				rx = nx/32 - 27 + x;
 				ry = ny/32 - 27 + y;
-				
+
 				i = GetRoom(rx, ry);
 				if (i != -1) {
 					if (room_chk[i] == 0) {
@@ -2162,9 +2182,9 @@ int GetNearestCheckpoint(int nx, int ny)
 			}
 			y += 2;
 		}
-		
+
 	}
-	
+
 	return nearest_checkpoint;
 }
 
@@ -2190,7 +2210,7 @@ void TeleportPlayerToNextRoom()
 	while (! ((rooms[c_room].checkpoint!=0)&&(rooms[c_room].visited!=0))) {
 		c_room = (c_room + 1) % 3000;
 	}
-	
+
 	if (c_room == 0) {
 		player_x = 8232;
 		player_y = 8108;
@@ -2206,7 +2226,7 @@ void TeleportPlayerToNextRoom()
 void ActivateTile(unsigned char tile, int x, int y)
 {
 	int c_room;
-	
+
 	enter_pressed = 0;
 	switch (tile) {
 		case 25:
@@ -2225,11 +2245,11 @@ void ActivateTile(unsigned char tile, int x, int y)
 				map_enabled = 1;
 				game_paused = 1;
 				tele_select = 1;
-				
+
 				c_scroll_x = player_x;
 				c_scroll_y = player_y;
 			}
-			
+
 			break;
 		case 26:
 			RoomTreasure(GetRoom(x, y), (x+y)%2);
@@ -2283,14 +2303,14 @@ void CompassPoint()
 	float pdir_1 = 0;
 	float pdir_2 = 0;
 	int pdir_1t = 0, pdir_2t = 0;
-	
+
 	rplx = player_x + PLAYERW/2;
 	rply = player_y + PLAYERH/2;
 	// Find the nearest SIGNIFICANT LOCATION for the player
-	
+
 	// Look at the three artifacts
 	// Unless the player is going for the place of power
-	
+
 	if (current_boss < 3) {
 		for (i = 0; i < 3; i++) {
 			// Has the player got this artifact already?
@@ -2351,19 +2371,19 @@ void CompassPoint()
 			}
 		}
 	}
-	
+
 	// Did we find a room? If so, point to it
-	
+
 	if (n_room != -1) {
 		loc_x = rooms[n_room].x * 32 + rooms[n_room].w * 16;
 		loc_y = rooms[n_room].y * 32 + rooms[n_room].h * 16;
-	
+
 		pdir_1 = PlayerDir(loc_x, loc_y) + M_PI;
 		pdir_1t = 1;
-		
+
 		n_room = -1;
 	}
-	
+
 	nearest = 1000000;
 	// Find the nearest uncleared artifact room
 	for (i = 0; i < 3000; i++) {
@@ -2377,27 +2397,27 @@ void CompassPoint()
 			}
 		}
 	}
-	
+
 	if (n_room != -1) {
 		loc_x = rooms[n_room].x * 32 + rooms[n_room].w * 16;
 		loc_y = rooms[n_room].y * 32 + rooms[n_room].h * 16;
-	
+
 		pdir_2 = PlayerDir(loc_x, loc_y) + M_PI;
 		pdir_2t = 1;
-		
+
 		n_room = -1;
 	}
-	
+
 	// Did we find at least one thing to point to? If not, abort
 	if (!(pdir_1t || pdir_2t))
 		return;
-	
+
 	DrawCircleEx(rplx - scroll_x, rply - scroll_y, 200, 190, 255);
 	if (pdir_1t)
 		DrawCircleEx(rplx - scroll_x + cos(pdir_1) * 170, rply - scroll_y + sin(pdir_1) * 170, 30, 20, 255);
 	if (pdir_2t)
 		DrawCircleEx(rplx - scroll_x + cos(pdir_2) * 170, rply - scroll_y + sin(pdir_2) * 170, 30, 20, 195);
-		
+
 	for (i = 0; i < 50; i++) {
 		if (pdir_1t)
 			DrawCircle(rplx - scroll_x + cos(pdir_1) * (25 + i * 4), rply - scroll_y + sin(pdir_1) * (25 + i * 4), 5, 255);
@@ -2405,13 +2425,13 @@ void CompassPoint()
 			DrawCircle(rplx - scroll_x + cos(pdir_2) * (25 + i * 4), rply - scroll_y + sin(pdir_2) * (25 + i * 4), 5, 195);
 	}
 	DrawCircleEx(rplx - scroll_x, rply - scroll_y, 30, 20, 255);
-	
+
 	DrawCircleEx(rplx - scroll_x, rply - scroll_y, 197, 193, 128);
 	if (pdir_1t)
 		DrawCircleEx(rplx - scroll_x + cos(pdir_1) * 170, rply - scroll_y + sin(pdir_1) * 170, 27, 23, 128);
 	if (pdir_2t)
 		DrawCircleEx(rplx - scroll_x + cos(pdir_2) * 170, rply - scroll_y + sin(pdir_2) * 170, 27, 23, 78);
-	
+
 	for (i = 0; i < 50; i++) {
 		if (pdir_1t)
 			DrawCircle(rplx - scroll_x + cos(pdir_1) * (25 + i * 4), rply - scroll_y + sin(pdir_1) * (25 + i * 4), 3, 128);
@@ -2478,7 +2498,7 @@ void SpecialTile(int x, int y)
 		case 42:
 			if (rooms[player_room].room_type == 5) {
 				if (CanGetArtifact(rooms[player_room].room_param)) {
-					
+
 				} else {
 					sprintf(message, "The artifact is tainted with shadow. You must slay more of the shadow first.");
 				}
@@ -2496,7 +2516,7 @@ void SpecialTile(int x, int y)
 			}
 			break;
 	}
-	
+
 	if (message[0] == 0) {
 		if (specialmessage != 0) {
 			switch (specialmessage) {
@@ -2508,24 +2528,24 @@ void SpecialTile(int x, int y)
 				case 6: sprintf(message, "Ancient artifact: Dodge enhancer"); break;
 				case 7: sprintf(message, "Ancient artifact: Ethereal Monocle"); break;
 				case 8: sprintf(message, "Ancient artifact: Crystal gatherer"); break;
-				
+
 				case 10: sprintf(message, "Enhancement: Shield upgrade"); break;
 				case 11: sprintf(message, "Enhancement: Circuit charge upgrade"); break;
 				case 12: sprintf(message, "Enhancement: Circuit refill upgrade"); break;
-				
+
 				case 20: sprintf(message, "Reward: Psi crystals"); break;
-				
+
 				case 30: sprintf(message, "Holy Sword 'Balmung' answers your call"); break;
 				case 31: sprintf(message, "Mystic Halberd 'Amenonuhoko' answers your call"); break;
 				case 32: sprintf(message, "Divine Bow 'Gandiva' answers your call"); break;
 				case 33: sprintf(message, "You capture the cursed seal. Return to the entrance"); break;
-				
+
 				case 40: sprintf(message, "Balmung will remain here, where the ley lines are strong"); break;
 				case 41: sprintf(message, "Amenonuhoko will remain here, where the ley lines are strong"); break;
 				case 42: sprintf(message, "Gandiva will remain here, where the ley lines are strong"); break;
-				
+
 				case 50: sprintf(message, ". . . . . .   retrieved 'Agate Knife'"); break;
-				
+
 				default: sprintf(message, "ERROR: NO MESSAGE VALUE GIVEN"); break;
 			}
 			specialmessagetimer--;
@@ -2534,9 +2554,9 @@ void SpecialTile(int x, int y)
 			}
 		}
 	}
-	
+
 	if (message[0] == 0) return;
-	
+
 	DrawRect(320 - strlen(message)*8 / 2 - 20, 100, strlen(message)*8+40, 48, 200);
 	DrawRect(320 - strlen(message)*8 / 2 - 15, 105, strlen(message)*8+30, 38, 32);
 	DrawRect(320 - strlen(message)*8 / 2 - 10, 110, strlen(message)*8+20, 28, 64);
@@ -2579,19 +2599,19 @@ void DrawArtifacts()
 {
 	int i;
 	SDL_Rect from, to;
-	
+
 	if (artifact_spr == NULL) {
 		artifact_spr = IMG_Load("dat/i/artifacts.png");
 		SDL_SetColorKey(artifact_spr, SDL_SRCCOLORKEY | SDL_RLEACCEL, 0);
 	}
-	
+
 	for (i = 0; i < 12; i++) {
 		if (artifacts[i]) {
 			from.x = i * 32;
 			from.y = 0;
 			from.w = 32;
 			from.h = 32;
-			
+
 			to.x = 608;
 			to.y = 47 + i * 35;
 			SDL_BlitSurface(artifact_spr, &from, screen, &to);
@@ -2608,20 +2628,20 @@ void ThinLine(SDL_Surface *scr, int x1, int y1, int x2, int y2, Uint8 col)
 {
 	int dx, dy, dm;
 	int i, j;
-	
+
 	dx = (x2 - x1);
 	dy = (y2 - y1);
-	
+
 	dm = abs(dx) > abs(dy) ? dx : dy;
-	
+
 	if (dm == 0) return;
-	
+
 	if (dm < 0) {
 		Swap(&x1, &x2);
 		Swap(&y1, &y2);
 		dx = (x2 - x1);
 		dy = (y2 - y1);
-		
+
 		dm = dm * -1;
 	}
 

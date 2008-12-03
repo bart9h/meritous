@@ -57,7 +57,13 @@ void InitHelp()
 	hlp = malloc(sizeof(struct help_file));
 	hlp->sections = 0;
 	
-	fp = fopen("dat/d/helpfile.txt", "r");
+	const char* fname = "dat/d/helpfile.txt";
+	fp = fopen(fname, "r");
+	if (fp == NULL) {
+		perror(fname);
+		return;
+	}
+
 	while (!feof(fp)) {
 		if (fgets(linebuf, 79, fp) == NULL)
 			break;
